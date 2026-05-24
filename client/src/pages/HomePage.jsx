@@ -9,6 +9,14 @@ const FEATURES = [
   { icon: "🔒", title: "Zero Storage",   desc: "Nothing ever touches the server"       },
   { icon: "📱", title: "Any Device",     desc: "No install, no login, just a URL"      },
 ];
+<div className="mt-10 text-center">
+  <p className="text-sm text-slate-400">
+    Crafted with ❤️ by{" "}
+    <span className="font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+      Abhiraj
+    </span>
+  </p>
+</div>
 
 export default function HomePage() {
   const { createRoom, joinRoom, deviceName, setDeviceName, connected } = useSocket();
