@@ -1,0 +1,24 @@
+# render.yaml — deploy the LabShare backend to Render.com
+# Docs: https://render.com/docs/yaml-spec
+
+services:
+  - type: web
+    name: labshare-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: CLIENT_ORIGINS
+        # Replace with your actual Vercel frontend URL after deploying
+        value: https://your-labshare-app.vercel.app
+      - key: ROOM_INACTIVITY_TIMEOUT_MS
+        value: 1800000
+      - key: ROOM_MAX_USERS
+        value: 20
+    healthCheckPath: /api/health
+    autoDeploy: true

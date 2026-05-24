@@ -1,189 +1,185 @@
 # 🚀 LabShare
 
-> **Instant file sharing for computer labs, classrooms, and local networks.**
-> Zero install · No accounts · No permanent storage · P2P via WebRTC
+> **Instant P2P file sharing for computer labs, classrooms, and local networks.**
+> Zero install · No accounts · No permanent storage · Files go browser-to-browser via WebRTC
 
 ---
 
-## ✨ Features
-
-| Feature | Details |
-|---|---|
-| 🏠 **Room System** | Generate unique room codes (e.g. `LAB-2387`) |
-| 📤 **File Transfer** | Drag-and-drop, P2P via WebRTC DataChannels |
-| ⚡ **Real-time** | Socket.IO for signaling and presence |
-| 💬 **Chat** | In-room text chat panel |
-| 📋 **Clipboard** | Share clipboard text across devices |
-| 📱 **QR Code** | Scan to join a room from mobile |
-| 🌙 **Dark/Light** | Theme toggle |
-| 🔒 **Private** | Rooms auto-expire after 30min inactivity |
-| 🚫 **No storage** | Files never touch the server; transferred P2P |
-
----
-
-## 🗂 Project Structure
+## 📁 Project Structure
 
 ```
 labshare/
-├── server/              # Node.js + Express + Socket.IO backend
-│   ├── index.js         # Main server (rooms, signaling, chat)
-│   └── package.json
+├── package.json            ← root scripts (run both together with concurrently)
+├── render.yaml             ← Render.com deployment config (backend)
 │
-├── client/              # React + Tailwind CSS frontend
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── App.jsx                    # Root component
-│   │   ├── index.jsx                  # Entry point
-│   │   ├── index.css                  # Global styles
-│   │   ├── context/
-│   │   │   └── SocketContext.jsx      # Socket + WebRTC state
-│   │   ├── components/
-│   │   │   ├── HomePage.jsx           # Landing / create-join UI
-│   │   │   └── RoomPage.jsx           # Room UI (drop zone, users, chat)
-│   │   ├── hooks/
-│   │   │   └── useQRCode.js           # QR code generator hook
-│   │   └── utils/
-│   │       └── helpers.js             # formatBytes, validateFile, etc.
+├── server/
+│   ├── index.js            ← Express + Socket.IO signaling server
 │   ├── package.json
-│   └── tailwind.config.js
+│   └── .env.example
 │
-└── README.md
+└── client/
+    ├── index.html
+    ├── vite.config.js
+    ├── tailwind.config.js
+    ├── postcss.config.js
+    ├── vercel.json         ← Vercel deployment config (frontend)
+    ├── .env.example
+    └── src/
+        ├── main.jsx        ← React entry point
+        ├── App.jsx         ← Root component + URL ?room= handling
+        ├── index.css       ← Tailwind + global styles
+        ├── context/
+        │   └── SocketContext.jsx   ← All socket, room, WebRTC, transfer state
+        ├── pages/
+        │   ├── HomePage.jsx        ← Landing: create/join room
+        │   └── RoomPage.jsx        ← Room: drop zone, users, chat, transfers
+        ├── components/
+        │   ├── Button.jsx
+        │   ├── ChatDrawer.jsx
+        │   ├── ConnectionBadge.jsx
+        │   ├── DropZone.jsx
+        │   ├── QRModal.jsx
+        │   ├── TransferCard.jsx
+        │   └── UserList.jsx
+        ├── hooks/
+        │   └── useQRCode.js
+        └── utils/
+            └── helpers.js
 ```
 
 ---
 
-## 🛠 Installation & Running
+## ⚡ Quick Start (Local Development)
 
 ### Prerequisites
-- **Node.js** v18+ (https://nodejs.org)
-- **npm** v9+
+- **Node.js** v18 or later — https://nodejs.org
+- **npm** v9 or later
 
-### Step 1 — Install dependencies
-
-```bash
-# Backend
-cd labshare/server
-npm install
-
-# Frontend
-cd ../client
-npm install
-```
-
-### Step 2 — Start the backend
+### 1. Install all dependencies
 
 ```bash
-cd labshare/server
-npm run dev       # Development (nodemon auto-reload)
-# or
-npm start         # Production
+# From the root labshare/ directory
+npm run install:all
 ```
 
-Server runs on **http://localhost:4000**
+This runs `npm install` in root, `client/`, and `server/`.
 
-### Step 3 — Start the frontend
+### 2. Start both servers together
 
 ```bash
-cd labshare/client
-npm start
+npm run dev
 ```
 
-Frontend runs on **http://localhost:3000** and proxies API calls to port 4000.
+Or start them individually:
 
-### Step 4 — Open on multiple devices
+```bash
+# Terminal 1 — backend (http://localhost:4000)
+cd server && npm run dev
 
-For local network use (lab computers sharing a network):
+# Terminal 2 — frontend (http://localhost:5173)
+cd client && npm run dev
+```
 
-1. Find your machine's local IP:
-   - macOS/Linux: `ifconfig | grep "inet "`
-   - Windows: `ipconfig`
+### 3. Open and test
 
-2. Set the `REACT_APP_SERVER_URL` env var to your IP:
-   ```bash
-   REACT_APP_SERVER_URL=http://192.168.1.100:4000 npm start
+1. Open **http://localhost:5173** in two browser windows (or two machines on the same network)
+2. On **Window A** → click **Create Room**
+3. On **Window B** → click **Join Room**, enter the code
+4. Drag a file onto the drop zone in Window A to send it to Window B
+
+---
+
+## 🌐 Deployment
+
+### Backend → Render.com
+
+1. Push the repo to GitHub
+2. Go to https://render.com → **New Web Service**
+3. Connect your repo, set **Root Directory** to `server`
+4. Build command: `npm install`
+5. Start command: `node index.js`
+6. Add environment variables:
    ```
+   NODE_ENV=production
+   CLIENT_ORIGINS=https://your-app.vercel.app
+   ```
+7. Deploy — note your service URL, e.g. `https://labshare-server.onrender.com`
 
-3. On other devices, open `http://192.168.1.100:3000`
+Alternatively, use the included `render.yaml` for Blueprint deployment.
+
+### Frontend → Vercel
+
+1. Go to https://vercel.com → **New Project** → import your repo
+2. Set **Root Directory** to `client`
+3. Add Environment Variable:
+   ```
+   VITE_SERVER_URL=https://labshare-server.onrender.com
+   ```
+4. Deploy — Vercel auto-detects Vite; the `vercel.json` handles SPA routing
+
+### Railway (alternative backend host)
+
+```bash
+cd server
+railway login
+railway init
+railway up
+railway variables set CLIENT_ORIGINS=https://your-app.vercel.app
+```
 
 ---
 
-## 🌐 Environment Variables
+## 🔒 Security
 
-### Server (`server/.env`)
-```
-PORT=4000
-CLIENT_URL=http://localhost:3000
-```
-
-### Client (`client/.env`)
-```
-REACT_APP_SERVER_URL=http://localhost:4000
-```
-
----
-
-## 🔒 Security Notes
-
-- Files are **never stored on the server**. The server only handles Socket.IO signaling (room management, WebRTC offer/answer/ICE exchange). All file data travels directly between browsers via WebRTC DataChannels.
-- Rooms auto-delete after **30 minutes of inactivity**.
-- Room capacity is limited to **20 devices**.
-- Text input is sanitized to prevent XSS.
-- Rate limiting (100 req / 15 min) on API endpoints.
-- File size limit: **2GB per file**.
+| What | How |
+|---|---|
+| **Files never stored** | Server only relays tiny JSON signals. File bytes travel P2P via WebRTC DataChannels. |
+| **Room expiry** | Rooms auto-delete after 30 min of inactivity |
+| **Input sanitization** | All text stripped of `<>` before broadcast |
+| **Rate limiting** | 120 API requests / 15 min per IP |
+| **Helmet** | HTTP security headers on all responses |
+| **Room capacity** | Max 20 devices per room |
+| **File validation** | Client blocks `.exe`, `.bat`, etc. and files > 2 GB |
 
 ---
 
 ## 📡 Architecture
 
 ```
-Browser A                  Server (Node.js)              Browser B
-   |                            |                            |
-   |──── socket: room:create ──►|                            |
-   |◄─── room:created ──────────|                            |
-   |                            |◄── socket: room:join ──────|
-   |◄─── room:user-joined ──────|───► room:joined ───────────►|
-   |                            |                            |
-   |──── webrtc:offer ─────────►|──── webrtc:offer ─────────►|
-   |◄─── webrtc:answer ─────────|◄─── webrtc:answer ─────────|
-   |──── webrtc:ice ────────────►────── webrtc:ice ──────────►|
-   |                            |                            |
-   |◄═══════════ Direct P2P WebRTC DataChannel ══════════════►|
-   |                   (file data flows here)                 |
+Browser A                    Server (Node.js)              Browser B
+    │                              │                            │
+    │─── room:create ─────────────►│                            │
+    │◄── room:created ─────────────│                            │
+    │                              │◄── room:join ──────────────│
+    │◄── room:user-joined ─────────│──► room:joined ────────────►│
+    │                              │                            │
+    │─── webrtc:offer ────────────►│──► webrtc:offer ───────────►│
+    │◄── webrtc:answer ────────────│◄── webrtc:answer ───────────│
+    │─── webrtc:ice-candidate ────►│──► webrtc:ice-candidate ───►│
+    │                              │                            │
+    │◄══════════ Direct P2P RTCDataChannel (file bytes) ════════►│
 ```
+
+The server is a **pure signaling relay** — it exchanges offer/answer/ICE candidates so browsers can locate each other and open a direct connection. Once that connection is established, file data travels entirely peer-to-peer with no server involvement.
 
 ---
 
-## 🚀 Deployment
+## 🧩 Features
 
-### Docker (Recommended)
-
-```dockerfile
-# server/Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-COPY . .
-EXPOSE 4000
-CMD ["node", "index.js"]
-```
-
-```bash
-docker build -t labshare-server ./server
-docker run -p 4000:4000 labshare-server
-```
-
-### Deploy frontend to Vercel/Netlify
-
-```bash
-cd client
-npm run build
-# Upload the /build folder to your static host
-```
+| Feature | Details |
+|---|---|
+| Room codes | Format `LAB-XXXX`, randomly generated, collision-free |
+| Multiple users | Up to 20 devices per room |
+| File transfer | Drag-and-drop or click-to-browse; progress + speed display |
+| Chat | Real-time in-room text chat via Socket.IO |
+| Clipboard share | Broadcast clipboard text to all room members |
+| QR code | Scan to join from mobile (generated client-side) |
+| Theme | Dark/light toggle |
+| Notifications | Toast alerts for joins, leaves, completions |
+| Auto-cleanup | Empty or idle rooms deleted automatically |
 
 ---
 
 ## 📄 License
 
-MIT — free to use, modify, and deploy in your lab or classroom.
+MIT — free to use, modify, and self-host.
