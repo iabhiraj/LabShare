@@ -134,6 +134,8 @@ export default function HomePage() {
               <div className="text-[11px] text-slate-500 mt-0.5 leading-tight">{f.desc}</div>
             </div>
           ))}
+        
+        </div>
           <div className="mt-10 text-center">
   <p className="text-sm text-slate-400">
     Crafted with ❤️ by{" "}
@@ -142,7 +144,6 @@ export default function HomePage() {
     </span>
   </p>
 </div>
-        </div>
       </div>
     </div>
   );
